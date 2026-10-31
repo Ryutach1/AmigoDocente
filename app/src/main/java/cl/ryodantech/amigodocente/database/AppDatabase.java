@@ -32,7 +32,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             context.getApplicationContext(),
                             AppDatabase.class,
                             "amigo_docente_database"
-                    ).build();
+                    ).allowMainThreadQueries().build();
                 }
             }
         }

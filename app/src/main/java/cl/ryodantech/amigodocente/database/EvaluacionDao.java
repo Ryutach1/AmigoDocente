@@ -10,6 +10,9 @@ public interface EvaluacionDao {
     @Insert
     long insertar(EvaluacionEntity evaluacion);
 
+    @androidx.room.Delete
+    void eliminar(EvaluacionEntity evaluacion);
+
     @Query("SELECT * FROM evaluaciones")
     List<EvaluacionEntity> obtenerTodas();
 
