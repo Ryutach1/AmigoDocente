@@ -56,6 +56,10 @@ public class ConfiguracionRepository {
         return configuracionDao.obtenerConfiguracion();
     }
 
+    public void guardarConfiguracion(ConfiguracionEntity config) {
+        configuracionDao.actualizar(config);
+    }
+
     public List<NivelEntity> obtenerNiveles() {
         return nivelDao.obtenerTodos();
     }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import cl.ryodantech.amigodocente.database.EvaluacionEntity
 import cl.ryodantech.amigodocente.database.NivelEntity
+import cl.ryodantech.amigodocente.database.ConfiguracionEntity
 import cl.ryodantech.amigodocente.repositories.ConfiguracionRepository
 import cl.ryodantech.amigodocente.repositories.EvaluacionRepository
 import cl.ryodantech.amigodocente.ui.theme.AmigoDocenteTheme
@@ -56,6 +58,8 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
     var listaNiveles by remember { mutableStateOf<List<NivelEntity>>(emptyList()) }
     var mostrarDialogo by remember { mutableStateOf(false) }
     var evaluacionSeleccionada by remember { mutableStateOf<EvaluacionEntity?>(null) }
+    var mostrarConfiguracion by remember { mutableStateOf(false) }
+
 
     fun cargarEvaluaciones() {
         val repo = EvaluacionRepository(context)
@@ -74,6 +78,12 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
             TopAppBar(
                 title = {
                     Text("Amigo Docente", fontWeight = FontWeight.Bold)
+                },
+                actions = {
+                    // BOTÓN DE AJUSTES (Engranaje)
+                    IconButton(onClick = { mostrarConfiguracion = true }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Configuración")
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -102,13 +112,13 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "¡Hola, Profe! 👋",
+                        text = "Bienvenido, Profe 👋",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        text = "¿Qué evaluaremos hoy? Crea una tabla de notas en segundos.",
+                        text = "¿Qué evaluaciones estan pendientes hoy?",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(top = 4.dp)
@@ -118,7 +128,7 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
 
             // 2. TÍTULO DE LA LISTA
             Text(
-                text = "Tus evaluaciones recientes",
+                text = "Tus evaluaciones disponibles",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -223,6 +233,12 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
         DialogoTablaNotas(
             evaluacion = evaluacionSeleccionada!!,
             onDismiss = { evaluacionSeleccionada = null }
+        )
+    }
+
+    if (mostrarConfiguracion) {
+        DialogoConfiguracion(
+            onDismiss = { mostrarConfiguracion = false }
         )
     }
 }
@@ -418,4 +434,65 @@ fun DialogoTablaNotas(
             }
         }
     }
+}
+
+@Composable
+fun DialogoConfiguracion(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val configRepo = ConfiguracionRepository(context)
+    val configActual = configRepo.obtenerConfiguracion()
+
+    // Estados para los campos
+    var exigenciaStr by remember { mutableStateOf((configActual.exigencia * 100).toInt().toString()) }
+    var decimalesStr by remember { mutableStateOf(configActual.decimales.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Configuración UTP") },
+        text = {
+            Column {
+                Text("Parámetros institucionales de evaluación", fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
+
+                OutlinedTextField(
+                    value = exigenciaStr,
+                    onValueChange = { exigenciaStr = it },
+                    label = { Text("Exigencia (%)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = decimalesStr,
+                    onValueChange = { decimalesStr = it },
+                    label = { Text("Decimales de nota (0, 1 o 2)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val nuevaExigencia = (exigenciaStr.toDoubleOrNull() ?: 60.0) / 100.0
+                val nuevosDecimales = decimalesStr.toIntOrNull() ?: 1
+
+                // Actualizamos el objeto
+                val configModificada = ConfiguracionEntity().apply{
+                    this.id = configActual.id
+                    this.notaMinima = configActual.notaMinima
+                    this.notaMaxima = configActual.notaMaxima
+                    this.notaAprobacion = configActual.notaAprobacion
+                    this.exigencia = nuevaExigencia
+                    this.decimales = nuevosDecimales
+                    this.modoRedondeo = configActual.modoRedondeo
+                }
+
+                configRepo.guardarConfiguracion(configModificada)
+                onDismiss()
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
 }
