@@ -14,14 +14,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -138,7 +139,7 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
             if (listaEvaluaciones.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "Aún no tienes evaluaciones.\n¡Toca el botón de abajo para crear la primera!",
+                        text = "Aún no tienes evaluaciones.\n¡Toca el botón + para crear la primera!",
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -171,9 +172,8 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
-                                            imageVector = Icons.Default.Star, // Puedes cambiarlo luego por un ícono de libro
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                            painter = painterResource(id = R.drawable.examen_by_magnific_in_flaticon_com),
+                                            contentDescription = null
                                         )
                                     }
                                 }
@@ -332,6 +332,7 @@ fun DialogoTablaNotas(
 
     val evalModel = cl.ryodantech.amigodocente.models.Evaluacion().apply {
         this.id = evaluacion.id
+        this.nombre = evaluacion.nombre // <--- AGREGA ESTA LÍNEA
         this.puntajeMaximo = evaluacion.puntajeMaximo
     }
 
@@ -423,6 +424,20 @@ fun DialogoTablaNotas(
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                     }
+                }
+                // Botón para exportar a PDF
+                Button(
+                    onClick = {
+                        try {
+                            cl.ryodantech.amigodocente.services.PdfGeneratorService
+                                .exportarYCompartir(context, evalModel, tabla, configModel) // <-- Agregamos configModel
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text("Convertir a PDF")
                 }
 
                 Button(
