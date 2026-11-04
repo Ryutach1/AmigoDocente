@@ -8,7 +8,7 @@ public class EvaluacionEntity {
     @PrimaryKey(autoGenerate = true)
     public long id;
     public String nombre;
-    public double puntajeMaximo;
+    public int puntajeMaximo;
     public String fecha;
     public long nivelAcademicoId;
     public long configuracionId;

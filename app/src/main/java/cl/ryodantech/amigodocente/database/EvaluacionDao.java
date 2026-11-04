@@ -13,6 +13,9 @@ public interface EvaluacionDao {
     @androidx.room.Delete
     void eliminar(EvaluacionEntity evaluacion);
 
+    @androidx.room.Update
+    void actualizar(EvaluacionEntity evaluacion);
+
     @Query("SELECT * FROM evaluaciones")
     List<EvaluacionEntity> obtenerTodas();
 

@@ -144,16 +144,18 @@ fun PantallaBienvenida(
 
 @Composable
 fun DialogoNuevaEvaluacion(
-    nombreNivel: String, // Recibimos el nombre del nivel para mostrarlo
+    nombreNivel: String,
+    evaluacionAEditar: EvaluacionEntity? = null, // Nuevo parámetro opcional
     onDismiss: () -> Unit,
-    onGuardar: (String, Double) -> Unit // Ya no devolvemos el nivelId
+    onGuardar: (String, Int) -> Unit
 ) {
-    var nombre by remember { mutableStateOf("") }
-    var puntaje by remember { mutableStateOf("") }
+    // Si estamos editando, precargamos los valores. Si no, vacíos.
+    var nombre by remember { mutableStateOf(evaluacionAEditar?.nombre ?: "") }
+    var puntaje by remember { mutableStateOf(evaluacionAEditar?.puntajeMaximo?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Evaluación") },
+        title = { Text(if (evaluacionAEditar == null) "Nueva Evaluación" else "Editar Evaluación") },
         text = {
             Column {
                 Text(
@@ -166,7 +168,7 @@ fun DialogoNuevaEvaluacion(
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Nombre (ej. Prueba 1)") },
+                    label = { Text("Nombre de la evaluación (ej. Prueba Marzo)") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -181,12 +183,12 @@ fun DialogoNuevaEvaluacion(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val p = puntaje.toDoubleOrNull() ?: 0.0
+                    val p = puntaje.toIntOrNull() ?: 0
                     if (nombre.isNotBlank() && p > 0) {
                         onGuardar(nombre, p)
                     }
                 }
-            ) { Text("Guardar") }
+            ) { Text(if (evaluacionAEditar == null) "Guardar" else "Actualizar") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
@@ -283,7 +285,7 @@ fun DialogoTablaNotas(
                         ) {
                             // LADO IZQUIERDO
                             Text(
-                                text = "${itemIzq.puntaje.toInt()}",
+                                text = "${itemIzq.puntaje}",
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center,
                                 fontSize = 15.sp
@@ -299,13 +301,13 @@ fun DialogoTablaNotas(
                             Box(
                                 modifier = Modifier
                                     .width(1.dp)
-                                    .height(24.dp) // Ajusta la altura según el tamaño de tu fila
-                                    .background(Color.LightGray)
+                                    .height(30.dp) // Ajusta la altura según el tamaño de tu fila
+                                    .background(Color.Black)
                             )
                             // LADO DERECHO (Si existe)
                             if (itemDer != null) {
                                 Text(
-                                    text = "${itemDer.puntaje.toInt()}",
+                                    text = "${itemDer.puntaje}",
                                     modifier = Modifier.weight(1f),
                                     textAlign = TextAlign.Center,
                                     fontSize = 15.sp
@@ -349,34 +351,6 @@ fun DialogoTablaNotas(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun FilaTabla(item: cl.ryodantech.amigodocente.models.ItemTabla, isCebra: Boolean) {
-    val colorFondo = if (isCebra) Color(0xFFF5F5F5) else Color.Transparent
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorFondo)
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "${item.puntaje.toInt()}",
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-            fontSize = 15.sp
-        )
-        Text(
-            text = "${item.nota}",
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (item.nota < 4.0) Color.Red else Color.Unspecified
-        )
     }
 }
 

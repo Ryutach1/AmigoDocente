@@ -26,28 +26,21 @@ public class CalculadoraNotas {
         return redondear(raw);
     }
 
-    public double notaDesdePuntaje(double puntajeObtenido, double puntajeTotal) {
-        if (puntajeTotal <= 0) throw new IllegalArgumentException("puntajeTotal > 0");
-        return notaDesdePorcentaje(clamp(puntajeObtenido / puntajeTotal, 0.0, 1.0));
+    public double notaDesdePuntaje(int puntajeObtenido, int puntajeTotal) {
+        if (puntajeTotal <= 0) return 1.0;
+        double p = (double) puntajeObtenido / puntajeTotal;
+        return notaDesdePorcentaje(p);
     }
 
-    public double puntajeDeAprobacion(double puntajeTotal) {
+    public double puntajeDeAprobacion(int puntajeTotal) {
         return config.getExigencia() * puntajeTotal;
     }
 
+    // REDONDEO SIMPLIFICADO: 1 decimal, hacia arriba y con protección de dobles
     private double redondear(double valor) {
-        int d = config.getDecimales();
-        double factor = Math.pow(10, d);
-
-        // TRUCO: Redondeamos a 4 decimales primero para evitar el "3.875000001"
+        // Evitamos errores de precisión tipo 3.9500000001
         double valorLimpio = Math.round(valor * 10000.0) / 10000.0;
-
-        double escalado = valorLimpio * factor;
-        double r = (config.getModoRedondeo() == ConfiguracionUTP.ModoRedondeo.HACIA_ARRIBA)
-                ? Math.ceil(escalado)
-                : Math.round(escalado);
-
-        return r / factor;
+        return Math.ceil(valorLimpio * 10.0) / 10.0;
     }
 
     private static double clamp(double v, double min, double max) {

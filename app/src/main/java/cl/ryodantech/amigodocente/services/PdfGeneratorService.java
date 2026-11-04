@@ -111,7 +111,7 @@ public class PdfGeneratorService {
             ItemTabla itemIzq = items.get(i);
             paint.setFakeBoldText(false);
             paint.setColor(Color.BLACK);
-            canvas.drawText(String.valueOf((int)itemIzq.getPuntaje()), xPuntajeIzq - 5, y, paint);
+            canvas.drawText(String.valueOf(itemIzq.getPuntaje()), xPuntajeIzq - 5, y, paint);
 
             paint.setFakeBoldText(true);
             paint.setColor(itemIzq.getNota() < 4.0 ? Color.RED : Color.BLACK);
@@ -123,7 +123,7 @@ public class PdfGeneratorService {
                 ItemTabla itemDer = items.get(indexDer);
                 paint.setFakeBoldText(false);
                 paint.setColor(Color.BLACK);
-                canvas.drawText(String.valueOf((int)itemDer.getPuntaje()), xPuntajeDer - 5, y, paint);
+                canvas.drawText(String.valueOf(itemDer.getPuntaje()), xPuntajeDer - 5, y, paint);
 
                 paint.setFakeBoldText(true);
                 paint.setColor(itemDer.getNota() < 4.0 ? Color.RED : Color.BLACK);

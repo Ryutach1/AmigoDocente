@@ -21,6 +21,10 @@ public class EvaluacionRepository {
         return evaluacionDao.insertar(evaluacion);
     }
 
+    public void actualizarEvaluacion(EvaluacionEntity evaluacion) {
+        evaluacionDao.actualizar(evaluacion);
+    }
+
     public void eliminarEvaluacion(EvaluacionEntity evaluacion) {
         evaluacionDao.eliminar(evaluacion);
     }

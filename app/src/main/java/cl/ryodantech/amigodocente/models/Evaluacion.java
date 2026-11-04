@@ -3,7 +3,7 @@ package cl.ryodantech.amigodocente.models;
 public class Evaluacion {
     private long id;
     private String nombre;          // Ej: "Prueba Unidad 1"
-    private double puntajeMaximo;   // Ej: 60.0
+    private int puntajeMaximo;   // Ej: 60.0
     private String fecha;           // Guardaremos la fecha como String por ahora (YYYY-MM-DD)
     private long nivelAcademicoId;  // A qué nivel pertenece (obligatorio)
 
@@ -16,8 +16,8 @@ public class Evaluacion {
     public void setId(long id) { this.id = id; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
-    public double getPuntajeMaximo() { return puntajeMaximo; }
-    public void setPuntajeMaximo(double puntajeMaximo) { this.puntajeMaximo = puntajeMaximo; }
+    public int getPuntajeMaximo() { return puntajeMaximo; }
+    public void setPuntajeMaximo(int puntajeMaximo) { this.puntajeMaximo = puntajeMaximo; }
     public String getFecha() { return fecha; }
     public void setFecha(String fecha) { this.fecha = fecha; }
     public long getNivelAcademicoId() { return nivelAcademicoId; }

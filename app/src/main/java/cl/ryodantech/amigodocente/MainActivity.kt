@@ -9,17 +9,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,9 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cl.ryodantech.amigodocente.database.EvaluacionEntity
 import cl.ryodantech.amigodocente.database.NivelEntity
-import cl.ryodantech.amigodocente.repositories.ConfiguracionRepository
-import cl.ryodantech.amigodocente.repositories.EvaluacionRepository
 import cl.ryodantech.amigodocente.ui.theme.AmigoDocenteTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.ryodantech.amigodocente.viewmodels.ConfiguracionViewModel
+import cl.ryodantech.amigodocente.viewmodels.EvaluacionViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -48,26 +48,17 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaPrincipal(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    var listaNiveles by remember { mutableStateOf<List<NivelEntity>>(emptyList()) }
-    var cargando by remember { mutableStateOf(true) } // Para evitar parpadeos al inicio
+fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel()) {
+    val listaNiveles by configViewModel.niveles.collectAsState()
     var nivelAEliminar by remember { mutableStateOf<NivelEntity?>(null) }
 
     var nivelActual by remember { mutableStateOf<NivelEntity?>(null) }
     var mostrarConfiguracion by remember { mutableStateOf(false) }
     var mostrarDialogoNivel by remember { mutableStateOf(false) } // <-- Nuevo
 
-    fun cargarNiveles() {
-        val configRepo = ConfiguracionRepository(context)
-        listaNiveles = configRepo.obtenerNiveles()
-        cargando = false
-    }
+    val cargando by configViewModel.isLoading.collectAsState() // <-- NUEVO
 
-    LaunchedEffect(Unit) {
-        cargarNiveles()
-    }
-
+    // Si está cargando, mostramos el circulito
     if (cargando) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -78,12 +69,10 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
     // Si la lista está vacía, mostramos la Bienvenida
     if (listaNiveles.isEmpty()) {
         PantallaBienvenida { cursosElegidos ->
-            val configRepo = ConfiguracionRepository(context)
             // Guardamos cada curso seleccionado en la base de datos
             for (curso in cursosElegidos) {
-                configRepo.agregarNivel(curso)
+                configViewModel.agregarNivel(curso)
             }
-            cargarNiveles() // Recargamos para que desaparezca la bienvenida
         }
         return // Detenemos la ejecución aquí para que no dibuje el resto
     }
@@ -175,10 +164,8 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
         DialogoNuevoNivel(
             onDismiss = { mostrarDialogoNivel = false },
             onGuardar = { nombre ->
-                val configRepo = ConfiguracionRepository(context)
-                configRepo.agregarNivel(nombre)
+                configViewModel.agregarNivel(nombre) // <-- Usamos el ViewModel
                 mostrarDialogoNivel = false
-                cargarNiveles()
             }
         )
     }
@@ -191,10 +178,8 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
             text = { Text("Si eliminas ${nivelAEliminar!!.nombre}, las tablas de notas asociadas ya no estarán disponibles. ¿Estás seguro?") },
             confirmButton = {
                 TextButton(onClick = {
-                    val configRepo = ConfiguracionRepository(context)
-                    configRepo.eliminarNivel(nivelAEliminar!!)
+                    configViewModel.eliminarNivel(nivelAEliminar!!)
                     nivelAEliminar = null
-                    cargarNiveles()
                 }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
@@ -208,21 +193,19 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
 @Composable
 fun PantallaEvaluacionesPorNivel(
     nivel: NivelEntity,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    evalViewModel: EvaluacionViewModel = viewModel() //inyeccion de viewmodel
 ) {
-    val context = LocalContext.current
-    var listaEvaluaciones by remember { mutableStateOf<List<EvaluacionEntity>>(emptyList()) }
+
+    var evaluacionAEditar by remember { mutableStateOf<EvaluacionEntity?>(null) }
+    val listaEvaluaciones by evalViewModel.evaluaciones.collectAsState()
     var mostrarDialogo by remember { mutableStateOf(false) }
     var evaluacionSeleccionada by remember { mutableStateOf<EvaluacionEntity?>(null) }
 
-    // Filtramos para mostrar solo las evaluaciones de ESTE nivel
-    fun cargarEvaluaciones() {
-        val repo = EvaluacionRepository(context)
-        listaEvaluaciones = repo.obtenerTodas().filter { it.nivelAcademicoId == nivel.id }
-    }
+    val cargando by evalViewModel.isLoading.collectAsState()
 
-    LaunchedEffect(Unit) {
-        cargarEvaluaciones()
+    LaunchedEffect(nivel.id) {
+        evalViewModel.cargarEvaluacionesPorNivel(nivel.id)
     }
 
     Scaffold(
@@ -231,7 +214,7 @@ fun PantallaEvaluacionesPorNivel(
                 title = { Text(nivel.nombre, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -250,7 +233,14 @@ fun PantallaEvaluacionesPorNivel(
             )
         }
     ) { padding ->
-        if (listaEvaluaciones.isEmpty()) {
+        if (cargando) {
+            Box(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }else if (listaEvaluaciones.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No hay evaluaciones para ${nivel.nombre}.\n¡Crea una nueva!", textAlign = TextAlign.Center)
             }
@@ -273,11 +263,14 @@ fun PantallaEvaluacionesPorNivel(
                         ) {
                             Text(text = eval.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             IconButton(onClick = {
-                                val repo = EvaluacionRepository(context)
-                                repo.eliminarEvaluacion(eval)
-                                cargarEvaluaciones()
+                                evaluacionAEditar = eval
                             }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Eliminar Evaluación", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                            }
+                            IconButton(onClick = {
+                                evalViewModel.eliminarEvaluacion(eval, nivel.id)
+                            }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Eliminar Evaluación", tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -298,10 +291,29 @@ fun PantallaEvaluacionesPorNivel(
                     this.configuracionId = 1
                     this.fecha = "2026-10-30"
                 }
-                val repo = EvaluacionRepository(context)
-                repo.guardarEvaluacion(nuevaEval)
+                evalViewModel.guardarEvaluacion(nuevaEval, nivel.id)
                 mostrarDialogo = false
-                cargarEvaluaciones()
+            }
+        )
+    }
+
+    // Diálogo para editar
+    if (evaluacionAEditar != null) {
+        DialogoNuevaEvaluacion(
+            nombreNivel = nivel.nombre,
+            evaluacionAEditar = evaluacionAEditar,
+            onDismiss = { evaluacionAEditar = null },
+            onGuardar = { nombre, puntaje ->
+                val evalModificada = EvaluacionEntity().apply {
+                    this.id = evaluacionAEditar!!.id // Mantenemos el ID original
+                    this.nombre = nombre
+                    this.puntajeMaximo = puntaje
+                    this.nivelAcademicoId = nivel.id
+                    this.configuracionId = evaluacionAEditar!!.configuracionId
+                    this.fecha = evaluacionAEditar!!.fecha
+                }
+                evalViewModel.editarEvaluacion(evalModificada, nivel.id)
+                evaluacionAEditar = null
             }
         )
     }
@@ -312,6 +324,7 @@ fun PantallaEvaluacionesPorNivel(
             onDismiss = { evaluacionSeleccionada = null }
         )
     }
+
 }
 
 // Función auxiliar para determinar el color de la nota
