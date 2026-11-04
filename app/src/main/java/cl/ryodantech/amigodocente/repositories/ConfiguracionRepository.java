@@ -23,7 +23,6 @@ public class ConfiguracionRepository {
 
     /**
      * Se llama al iniciar la app. Verifica que exista la configuración base
-     * y los niveles escolares. Si no existen, los crea.
      */
     public void inicializarDatosBase() {
         // 1. ¿Hay configuración UTP?
@@ -38,8 +37,8 @@ public class ConfiguracionRepository {
             configuracionDao.insertar(configDefault);
         }
 
-        // 2. ¿Hay niveles escolares?
-        if (nivelDao.obtenerTodos().isEmpty()) {
+        // 2. ¿Hay niveles escolares? SECCIÓN COMENTADA PARA PERSONALIZACIÓN INICIAL EN MAINACTIVITY
+        /*if (nivelDao.obtenerTodos().isEmpty()) {
             String[] nivelesBase = {
                     "1° Básico", "2° Básico", "3°Básico", "4° Básico", "5° Básico", "6° Básico", "7° Básico", "8° Básico", "1° Medio", "2° Medio", "3° Medio", "4° Medio"
             };
@@ -48,7 +47,7 @@ public class ConfiguracionRepository {
                 nivel.nombre = nombre;
                 nivelDao.insertar(nivel);
             }
-        }
+        }*/
     }
 
     // Métodos para que la interfaz consulte los datos
@@ -62,5 +61,15 @@ public class ConfiguracionRepository {
 
     public List<NivelEntity> obtenerNiveles() {
         return nivelDao.obtenerTodos();
+    }
+
+    public void agregarNivel(String nombre) {
+        NivelEntity nuevo = new NivelEntity();
+        nuevo.nombre = nombre;
+        nivelDao.insertar(nuevo);
+    }
+
+    public void eliminarNivel(NivelEntity nivel) {
+        nivelDao.eliminar(nivel);
     }
 }

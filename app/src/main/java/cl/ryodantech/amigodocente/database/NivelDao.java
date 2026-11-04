@@ -16,4 +16,7 @@ public interface NivelDao {
     // Para no duplicar niveles (ej: si ya existe "1° Medio", no crearlo de nuevo)
     @Query("SELECT * FROM niveles WHERE nombre = :nombre LIMIT 1")
     NivelEntity buscarPorNombre(String nombre);
+
+    @androidx.room.Delete
+    void eliminar(NivelEntity nivel);
 }

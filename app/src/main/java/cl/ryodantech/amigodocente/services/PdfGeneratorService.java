@@ -27,10 +27,12 @@ public class PdfGeneratorService {
         PdfDocument document = new PdfDocument();
         Paint paint = new Paint();
 
+        // Configuración de la página (A4: 595 x 842 puntos)
         int pageWidth = 595;
         int pageHeight = 842;
         int margin = 40;
-        int rowHeight = 20;
+        int rowHeight = 22; // Un poco más alto para que respire el texto
+        int colWidth = (pageWidth - (margin * 2)) / 4; // Ancho para 4 columnas
 
         int y = 0;
         int pageNumber = 1;
@@ -41,7 +43,7 @@ public class PdfGeneratorService {
         // --- DIBUJAR MARCA DE AGUA ---
         //dibujarMarcaDeAgua(canvas, pageWidth, pageHeight);
 
-        // --- CABECERA ---
+        // --- CABECERA DEL DOCUMENTO ---
         paint.setColor(Color.BLACK);
         paint.setFakeBoldText(true);
         paint.setTextSize(18);
@@ -50,59 +52,99 @@ public class PdfGeneratorService {
         paint.setFakeBoldText(false);
         paint.setTextSize(12);
         canvas.drawText("Puntaje Máximo: " + evaluacion.getPuntajeMaximo(), margin, 75, paint);
-        canvas.drawText("Exigencia establecida: " + (int)(config.getExigencia() * 100) + "%", margin, 95, paint);
+        canvas.drawText("Exigencia: " + (int)(config.getExigencia() * 100) + "%", margin, 95, paint);
 
-        y = 130;
+        // --- ENCABEZADOS DE LA TABLA (Fondo Gris) ---
+        y = 120;
+        paint.setColor(Color.parseColor("#E0E0E0")); // Gris claro
+        canvas.drawRect(margin, y - 15, pageWidth - margin, y + 5, paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(12);
+        paint.setFakeBoldText(true);
+
+        // Coordenadas X para centrar los textos de los encabezados
+        float xPuntajeIzq = margin + (colWidth / 2f);
+        float xNotaIzq = margin + colWidth + (colWidth / 2f);
+        float xPuntajeDer = margin + (colWidth * 2) + (colWidth / 2f);
+        float xNotaDer = margin + (colWidth * 3) + (colWidth / 2f);
+
+        canvas.drawText("Puntaje", xPuntajeIzq - 20, y, paint);
+        canvas.drawText("Nota", xNotaIzq - 10, y, paint);
+        canvas.drawText("Puntaje", xPuntajeDer - 20, y, paint);
+        canvas.drawText("Nota", xNotaDer - 10, y, paint);
+
+        y += 20; // Bajamos para empezar a dibujar los datos
 
         List<ItemTabla> items = tabla.getItems();
         int middle = (items.size() + 1) / 2;
 
         for (int i = 0; i < middle; i++) {
+            // Si nos pasamos del límite inferior de la hoja, creamos una nueva
             if (y > pageHeight - margin - 20) {
                 document.finishPage(page);
                 pageNumber++;
                 pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
                 page = document.startPage(pageInfo);
                 canvas = page.getCanvas();
-
-                // Si hay más de una página, dibujamos la marca de agua también en la nueva
                 //dibujarMarcaDeAgua(canvas, pageWidth, pageHeight);
 
-                y = margin + 20;
+                // Repetir encabezados en la nueva hoja
+                paint.setColor(Color.parseColor("#E0E0E0"));
+                canvas.drawRect(margin, margin - 10, pageWidth - margin, margin + 10, paint);
+                paint.setColor(Color.BLACK);
+                canvas.drawText("Puntaje", xPuntajeIzq - 20, margin + 5, paint);
+                canvas.drawText("Nota", xNotaIzq - 10, margin + 5, paint);
+                canvas.drawText("Puntaje", xPuntajeDer - 20, margin + 5, paint);
+                canvas.drawText("Nota", xNotaDer - 10, margin + 5, paint);
+
+                y = margin + 30;
             }
 
+            // EFECTO CEBRA (Fila de fondo alterno)
+            if (i % 2 == 0) {
+                paint.setColor(Color.parseColor("#F5F5F5")); // Gris muy suave
+                canvas.drawRect(margin, y - 15, pageWidth - margin, y + 5, paint);
+            }
+
+            // --- DATOS IZQUIERDA ---
             ItemTabla itemIzq = items.get(i);
+            paint.setFakeBoldText(false);
             paint.setColor(Color.BLACK);
-            paint.setTextSize(12);
-            canvas.drawText((int)itemIzq.getPuntaje() + " pts", margin, y, paint);
+            canvas.drawText(String.valueOf((int)itemIzq.getPuntaje()), xPuntajeIzq - 5, y, paint);
 
+            paint.setFakeBoldText(true);
             paint.setColor(itemIzq.getNota() < 4.0 ? Color.RED : Color.BLACK);
-            canvas.drawText("Nota: " + itemIzq.getNota(), margin + 70, y, paint);
+            canvas.drawText(String.valueOf(itemIzq.getNota()), xNotaIzq - 5, y, paint);
 
+            // --- DATOS DERECHA ---
             int indexDer = i + middle;
             if (indexDer < items.size()) {
                 ItemTabla itemDer = items.get(indexDer);
+                paint.setFakeBoldText(false);
                 paint.setColor(Color.BLACK);
-                canvas.drawText((int)itemDer.getPuntaje() + " pts", pageWidth / 2 + 10, y, paint);
+                canvas.drawText(String.valueOf((int)itemDer.getPuntaje()), xPuntajeDer - 5, y, paint);
 
+                paint.setFakeBoldText(true);
                 paint.setColor(itemDer.getNota() < 4.0 ? Color.RED : Color.BLACK);
-                canvas.drawText("Nota: " + itemDer.getNota(), pageWidth / 2 + 80, y, paint);
+                canvas.drawText(String.valueOf(itemDer.getNota()), xNotaDer - 5, y, paint);
             }
 
             y += rowHeight;
         }
 
-        // Pie de página de la última hoja
         paint.setColor(Color.LTGRAY);
         paint.setTextSize(10);
-        canvas.drawText("AmigoDocente", pageWidth / 2 + 120, pageHeight - 20, paint);
+        canvas.drawText("AmigoDocente", pageWidth / 2 + 180, pageHeight - 20, paint);
 
         document.finishPage(page);
 
+        // Guardar archivo
         File file = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "tabla_" + evaluacion.getNombre().replace(" ", "_") + ".pdf");
         document.writeTo(new FileOutputStream(file));
         document.close();
 
+        // Compartir
         Uri fileUri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("application/pdf");
@@ -110,6 +152,7 @@ public class PdfGeneratorService {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         context.startActivity(Intent.createChooser(intent, "Compartir Tabla de Notas"));
     }
+ //linea de codigo del pie de pagina = canvas.drawText("AmigoDocente", pageWidth / 2 + 120, pageHeight - 20, paint);
 
     /* Metodo para la marca de agua
     private static void dibujarMarcaDeAgua(Canvas canvas, int pageWidth, int pageHeight) {

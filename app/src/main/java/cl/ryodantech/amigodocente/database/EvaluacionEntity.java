@@ -11,6 +11,5 @@ public class EvaluacionEntity {
     public double puntajeMaximo;
     public String fecha;
     public long nivelAcademicoId;
-    public long cursoId;
     public long configuracionId;
 }
