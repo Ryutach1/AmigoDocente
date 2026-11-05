@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase;
                 NivelEntity.class,
                 EvaluacionEntity.class
         },
-        version = 3,
+        version = 4,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -32,7 +32,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             context.getApplicationContext(),
                             AppDatabase.class,
                             "amigo_docente_database"
-                    ).allowMainThreadQueries().build();
+                    ).allowMainThreadQueries().fallbackToDestructiveMigration().build();
                 }
             }
         }

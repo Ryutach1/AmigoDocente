@@ -17,6 +17,9 @@ public interface NivelDao {
     @Query("SELECT * FROM niveles WHERE nombre = :nombre LIMIT 1")
     NivelEntity buscarPorNombre(String nombre);
 
+    @androidx.room.Update
+    void actualizar(NivelEntity nivel);
+
     @androidx.room.Delete
     void eliminar(NivelEntity nivel);
 }

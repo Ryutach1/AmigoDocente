@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.AmigoDocente" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.AmigoDocente.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#1E3A8A</item> <!-- Azul oscuro -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.AmigoDocente</item>
+    </style>
 </resources>

@@ -69,6 +69,10 @@ public class ConfiguracionRepository {
         nivelDao.insertar(nuevo);
     }
 
+    public void actualizarNivel(NivelEntity nivel) {
+        nivelDao.actualizar(nivel);
+    }
+
     public void eliminarNivel(NivelEntity nivel) {
         nivelDao.eliminar(nivel);
     }

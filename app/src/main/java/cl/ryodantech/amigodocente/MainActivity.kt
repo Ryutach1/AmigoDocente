@@ -4,10 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,7 +42,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AmigoDocenteTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize(),
+                    containerColor = Color(0xFFF4F6F9)) { innerPadding ->
                     PantallaPrincipal(modifier = Modifier.padding(innerPadding))
                 }
             }
@@ -46,13 +51,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel()) {
     val listaNiveles by configViewModel.niveles.collectAsState()
-    var nivelAEliminar by remember { mutableStateOf<NivelEntity?>(null) }
 
+    var nivelAEditar by remember { mutableStateOf<NivelEntity?>(null) }
+    var nivelAEliminar by remember { mutableStateOf<NivelEntity?>(null) }
     var nivelActual by remember { mutableStateOf<NivelEntity?>(null) }
+
     var mostrarConfiguracion by remember { mutableStateOf(false) }
     var mostrarDialogoNivel by remember { mutableStateOf(false) } // <-- Nuevo
 
@@ -82,7 +89,14 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Mis Cursos", fontWeight = FontWeight.Bold) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(painterResource(R.drawable.instalaciones_by_magnific_in_flaticon_com),
+                                contentDescription = "IconoInicial")
+                            Text("Amigo Docente", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        }
+                    },
+                    //title = { Text("Mis Cursos", fontWeight = FontWeight.Bold) },
                     actions = {
                         IconButton(onClick = { mostrarConfiguracion = true }) {
                             Icon(Icons.Default.Settings, contentDescription = "Configuración")
@@ -99,48 +113,71 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
                 ExtendedFloatingActionButton(
                     onClick = { mostrarDialogoNivel = true },
                     icon = { Icon(Icons.Default.Add, contentDescription = "Agregar Nivel") },
-                    text = { Text("Agregar Curso") }
+                    text = { Text("Añadir Curso") },
+                    shape = MaterialTheme.shapes.large, // <--- Botón más redondeado
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             }
         ) { padding ->
             Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Hola, Profe 👋", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Text("Elige los cursos para crear y gestionar sus pruebas.", fontSize = 14.sp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Hola, Profe 👋", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1E293B))
+                        Text("Elige un curso para crear y gestionar las notas.", fontSize = 14.sp, color = Color.Gray)
                     }
                 }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Espacio para el botón flotante
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp) // Separación entre tarjetas
                 ) {
                     items(listaNiveles) { nivel ->
                         Card(
                             modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
                                 .fillMaxWidth()
-                                .clickable { nivelActual = nivel },
+                                .combinedClickable(
+                                    onClick = {
+                                        nivelActual = nivel // Acción principal
+                                    },
+                                    onLongClick = {
+                                        nivelAEditar = nivel // Acción secundaria (Editar)
+                                    }
+                                ),
+                            shape = RoundedCornerShape(20.dp), // Bordes muy redondeados
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.libro_de_lectura_by_magnific_in_flaticon_com),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp)
-                                )
+                                // Ícono con fondo de color
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.libro_de_lectura_by_magnific_in_flaticon_com),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(28.dp),
+                                            tint = Color.White
+                                        )
+                                    }
+                                }
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text(text = nivel.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-
-                                // BOTÓN ELIMINAR NIVEL
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = nivel.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                                    TextoAnimadoAyuda()
+                                }
                                 IconButton(onClick = { nivelAEliminar = nivel }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Eliminar Nivel", tint = MaterialTheme.colorScheme.error)
+                                    Icon(Icons.Default.Clear, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
                                 }
                             }
                         }
@@ -187,6 +224,18 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
             }
         )
     }
+
+    //dialogo de edición de nivel
+    if (nivelAEditar != null) {
+        DialogoEditarNivel(
+            nivelActual = nivelAEditar!!,
+            onDismiss = { nivelAEditar = null },
+            onGuardar = { nuevoNombre ->
+                configViewModel.editarNivel(nivelAEditar!!, nuevoNombre)
+                nivelAEditar = null
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -228,8 +277,9 @@ fun PantallaEvaluacionesPorNivel(
                 onClick = { mostrarDialogo = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = "Nueva") },
                 text = { Text("Nueva Evaluación") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                shape = MaterialTheme.shapes.large, // <--- Botón más redondeado
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
             )
         }
     ) { padding ->
@@ -255,13 +305,16 @@ fun PantallaEvaluacionesPorNivel(
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                             .fillMaxWidth()
                             .clickable { evaluacionSeleccionada = eval },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        shape = RoundedCornerShape(20.dp), // Bordes muy redondeados
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // <--- Sombra
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(text = eval.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(text = "Puntaje: " + eval.puntajeMaximo, fontSize = 12.sp, color = Color.Gray)
                             IconButton(onClick = {
                                 evaluacionAEditar = eval
                             }) {
@@ -327,7 +380,25 @@ fun PantallaEvaluacionesPorNivel(
 
 }
 
+@Composable
+fun TextoAnimadoAyuda() {
+    val textos = listOf("Presiona para gestionar las evaluaciones", "Mantén presionado para editar el curso")
+    var index by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5000) // Cambia cada 5 segundos
+            index = (index + 1) % textos.size
+        }
+    }
+
+    Crossfade(targetState = index, label = "texto_ayuda") { i ->
+        Text(text = textos[i], fontSize = 12.sp, color = Color.Gray)
+    }
+}
+
+@Composable
 // Función auxiliar para determinar el color de la nota
 fun obtenerColorNota(nota: Double): Color {
-    return if (nota < 4.0) Color.Red else Color.Unspecified
+    return if (nota < 4.0) Color.Red else MaterialTheme.colorScheme.primary
 }

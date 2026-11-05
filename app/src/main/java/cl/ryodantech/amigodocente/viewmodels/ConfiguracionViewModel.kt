@@ -43,6 +43,14 @@ class ConfiguracionViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun editarNivel(nivel: NivelEntity, nuevoNombre: String) {
+        viewModelScope.launch {
+            val nivelModificado = nuevoNombre // Como es Java, usa: nivel.setNombre(nuevoNombre)
+            withContext(Dispatchers.IO) { repo.actualizarNivel(nivel) }
+            cargarNiveles()
+        }
+    }
+
     fun eliminarNivel(nivel: NivelEntity) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { repo.eliminarNivel(nivel) }

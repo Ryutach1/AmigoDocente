@@ -17,7 +17,7 @@ public class ItemTabla {
     public void setId(long id) { this.id = id; }
     public long getTablaNotasId() { return tablaNotasId; }
     public void setTablaNotasId(long tablaNotasId) { this.tablaNotasId = tablaNotasId; }
-    public double getPuntaje() { return puntaje; }
+    public int getPuntaje() { return puntaje; }
     public void setPuntaje(int puntaje) { this.puntaje = puntaje; }
     public double getNota() { return nota; }
     public void setNota(double nota) { this.nota = nota; }

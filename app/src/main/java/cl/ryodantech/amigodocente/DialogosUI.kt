@@ -1,12 +1,10 @@
 package cl.ryodantech.amigodocente
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,9 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -46,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import cl.ryodantech.amigodocente.database.ConfiguracionEntity
 import cl.ryodantech.amigodocente.database.EvaluacionEntity
+import cl.ryodantech.amigodocente.database.NivelEntity
 import cl.ryodantech.amigodocente.repositories.ConfiguracionRepository
 
 @Composable
@@ -136,7 +134,7 @@ fun PantallaBienvenida(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
             ) {
-                Text("Comenzar a crear tablas", fontSize = 16.sp)
+                Text("Comenzar a crear escalas de notas", fontSize = 16.sp)
             }
         }
     }
@@ -209,15 +207,9 @@ fun DialogoTablaNotas(
 
     val configModel = cl.ryodantech.amigodocente.models.ConfiguracionUTP().apply {
         this.exigencia = configEntity.exigencia
-        this.decimales = configEntity.decimales
         this.notaMinima = configEntity.notaMinima
         this.notaMaxima = configEntity.notaMaxima
         this.notaAprobacion = configEntity.notaAprobacion
-        this.modoRedondeo = if (configEntity.modoRedondeo == "HACIA_ARRIBA") {
-            cl.ryodantech.amigodocente.models.ConfiguracionUTP.ModoRedondeo.HACIA_ARRIBA
-        } else {
-            cl.ryodantech.amigodocente.models.ConfiguracionUTP.ModoRedondeo.NORMAL
-        }
     }
 
     val evalModel = cl.ryodantech.amigodocente.models.Evaluacion().apply {
@@ -230,13 +222,14 @@ fun DialogoTablaNotas(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f)
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
+            shadowElevation = 8.dp
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Tabla: ${evaluacion.nombre}",
+                    text = "Escala de notas de: ${evaluacion.nombre}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -246,14 +239,14 @@ fun DialogoTablaNotas(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(vertical = 8.dp),
+                        .background(Color(0xFFE2E8F0))
+                        .padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Puntaje", modifier = Modifier.weight(1f).padding(start = 8.dp), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
-                    Text("Nota", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
-                    Text("Puntaje", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
-                    Text("Nota", modifier = Modifier.weight(1f).padding(end = 8.dp), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
+                    Text("Puntaje", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Nota", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Puntaje", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Nota", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -274,7 +267,7 @@ fun DialogoTablaNotas(
                         val itemIzq = itemsIzquierda[index]
                         val itemDer = if (index < itemsDerecha.size) itemsDerecha[index] else null
 
-                        val colorFondo = if (index % 2 == 0) Color(0xFFF5F5F5) else Color.Transparent
+                        val colorFondo = if (index % 2 == 0) Color(0xFFF9FAFB) else Color.Transparent
 
                         Row(
                             modifier = Modifier
@@ -301,8 +294,8 @@ fun DialogoTablaNotas(
                             Box(
                                 modifier = Modifier
                                     .width(1.dp)
-                                    .height(30.dp) // Ajusta la altura según el tamaño de tu fila
-                                    .background(Color.Black)
+                                    .height(24.dp) // Ajusta la altura según el tamaño de tu fila
+                                    .background(Color(0xFFCBD5E1))
                             )
                             // LADO DERECHO (Si existe)
                             if (itemDer != null) {
@@ -338,14 +331,16 @@ fun DialogoTablaNotas(
                             e.printStackTrace()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    shape = MaterialTheme.shapes.large, // <--- Botón más redondeado
                 ) {
                     Text("Convertir a PDF")
                 }
 
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    shape = MaterialTheme.shapes.large, // <--- Botón más redondeado
                 ) {
                     Text("Cerrar Tabla")
                 }
@@ -439,6 +434,38 @@ fun DialogoNuevoNivel(
                     onGuardar(nombre)
                 }
             }) { Text("Agregar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+@Composable
+fun DialogoEditarNivel(
+    nivelActual: NivelEntity,
+    onDismiss: () -> Unit,
+    onGuardar: (String) -> Unit
+) {
+    var nombre by remember { mutableStateOf(nivelActual.nombre) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Nombre del Curso") },
+        text = {
+            OutlinedTextField(
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Nombre (ej. 3° Medio A)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (nombre.isNotBlank() && nombre != nivelActual.nombre) {
+                    onGuardar(nombre)
+                }
+            }) { Text("Guardar") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }

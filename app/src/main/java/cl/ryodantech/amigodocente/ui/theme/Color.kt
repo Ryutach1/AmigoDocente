@@ -2,10 +2,15 @@ package cl.ryodantech.amigodocente.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Azul principal (Confianza, educación)
+val AzulPrimario = Color(0xFF1E3A8A)
+val AzulClaro = Color(0xFF3B82F6)
+val AzulContenedor = Color(0xFFDBEAFE)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Terracota/Naranja (Energía, acción, el botón de "Crear")
+val NaranjaSecundario = Color(0xFFD97706)
+val NaranjaContenedor = Color(0xFFFEF3C7)
+
+// Fondos y textos
+val FondoClaro = Color(0xFFF8FAFC)
+val TextoOscuro = Color(0xFF1E293B)
