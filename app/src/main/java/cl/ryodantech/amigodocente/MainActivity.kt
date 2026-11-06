@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AmigoDocenteTheme {
                 Scaffold(modifier = Modifier.fillMaxSize(),
-                    containerColor = Color(0xFFF4F6F9)) { innerPadding ->
+                    containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
                     PantallaPrincipal(modifier = Modifier.padding(innerPadding))
                 }
             }
@@ -382,7 +382,7 @@ fun PantallaEvaluacionesPorNivel(
 
 @Composable
 fun TextoAnimadoAyuda() {
-    val textos = listOf("Presiona para gestionar las evaluaciones", "Mantén presionado para editar el curso")
+    val textos = listOf("Presiona para ver evaluaciones", "Mantén presionado para editar curso")
     var index by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {

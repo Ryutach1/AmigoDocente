@@ -12,11 +12,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-/*private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)*/
+private val DarkColorScheme = darkColorScheme(
+    primary = AzulPrimarioOscuro,
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF1E3A8A), // Azul profundo
+    onPrimaryContainer = TextoClaro,
+
+    secondary = NaranjaSecundarioOscuro,
+    onSecondary = Color.Black,
+
+    background = AzulOscuroFondo,
+    onBackground = TextoClaro,
+
+    surface = SuperficieOscura,
+    onSurface = TextoClaro
+)
 
 private val LightColorScheme = lightColorScheme(
     primary = AzulPrimario,
@@ -48,7 +58,7 @@ private val LightColorScheme = lightColorScheme(
 fun AmigoDocenteTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -57,7 +67,7 @@ fun AmigoDocenteTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        //darkTheme -> DarkColorScheme
+        darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
