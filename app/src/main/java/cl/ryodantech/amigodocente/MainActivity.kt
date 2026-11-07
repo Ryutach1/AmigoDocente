@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import cl.ryodantech.amigodocente.database.EvaluacionEntity
 import cl.ryodantech.amigodocente.database.NivelEntity
 import cl.ryodantech.amigodocente.ui.theme.AmigoDocenteTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.ryodantech.amigodocente.utils.ThemeManager
 import cl.ryodantech.amigodocente.viewmodels.ConfiguracionViewModel
 import cl.ryodantech.amigodocente.viewmodels.EvaluacionViewModel
 
@@ -41,10 +44,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AmigoDocenteTheme {
+
+            var isDarkMode by remember { mutableStateOf(ThemeManager.isDarkMode(this)) }
+
+            AmigoDocenteTheme(darkTheme = isDarkMode) {
                 Scaffold(modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-                    PantallaPrincipal(modifier = Modifier.padding(innerPadding))
+
+                    // Le pasamos la variable y la función para cambiarla a la pantalla
+                    PantallaPrincipal(
+                        modifier = Modifier.padding(innerPadding),
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = {
+                            isDarkMode = !isDarkMode
+                            ThemeManager.setDarkMode(this, isDarkMode) // Guardamos el cambio
+                        }
+                    )
                 }
             }
         }
@@ -53,7 +68,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel()) {
+fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel(),  isDarkMode: Boolean, onToggleTheme: () -> Unit) {
     val listaNiveles by configViewModel.niveles.collectAsState()
 
     var nivelAEditar by remember { mutableStateOf<NivelEntity?>(null) }
@@ -96,8 +111,16 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
                             Text("Amigo Docente", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                         }
                     },
+
                     //title = { Text("Mis Cursos", fontWeight = FontWeight.Bold) },
                     actions = {
+                        // BOTÓN DE MODO OSCURO
+                        IconButton(onClick = onToggleTheme) {
+                            Icon(
+                                painter = painterResource ( id = if (isDarkMode) R.drawable.luna_by_magnific_in_flaticon_com else R.drawable.sol_by_magnific_in_flaticon_com),
+                                contentDescription = "Cambiar Tema"
+                            )
+                        }
                         IconButton(onClick = { mostrarConfiguracion = true }) {
                             Icon(Icons.Default.Settings, contentDescription = "Configuración")
                         }
@@ -126,8 +149,8 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Hola, Profe 👋", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1E293B))
-                        Text("Elige un curso para crear y gestionar las notas.", fontSize = 14.sp, color = Color.Gray)
+                        Text("Hola, Profe 👋", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Elige un curso para crear y gestionar las notas.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -149,7 +172,7 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
                                     }
                                 ),
                             shape = RoundedCornerShape(20.dp), // Bordes muy redondeados
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Row(
@@ -167,13 +190,13 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
                                             painter = painterResource(id = R.drawable.libro_de_lectura_by_magnific_in_flaticon_com),
                                             contentDescription = null,
                                             modifier = Modifier.size(28.dp),
-                                            tint = Color.White
+                                            tint = MaterialTheme.colorScheme.surface
                                         )
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = nivel.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                                    Text(text = nivel.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                     TextoAnimadoAyuda()
                                 }
                                 IconButton(onClick = { nivelAEliminar = nivel }) {
@@ -306,7 +329,7 @@ fun PantallaEvaluacionesPorNivel(
                             .fillMaxWidth()
                             .clickable { evaluacionSeleccionada = eval },
                         shape = RoundedCornerShape(20.dp), // Bordes muy redondeados
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // <--- Sombra
                     ) {
                         Row(
@@ -314,7 +337,7 @@ fun PantallaEvaluacionesPorNivel(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(text = eval.nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text(text = "Puntaje: " + eval.puntajeMaximo, fontSize = 12.sp, color = Color.Gray)
+                            Text(text = "Puntaje: " + eval.puntajeMaximo, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             IconButton(onClick = {
                                 evaluacionAEditar = eval
                             }) {

@@ -14,11 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -50,26 +54,16 @@ import cl.ryodantech.amigodocente.repositories.ConfiguracionRepository
 fun PantallaBienvenida(
     onCursosSeleccionados: (List<String>) -> Unit
 ) {
-    // Lista de los cursos típicos en Chile
     val cursosDisponibles = listOf(
-        "1° Básico",
-        "2° Básico",
-        "3° Básico",
-        "4° Básico",
-        "5° Básico",
-        "6° Básico",
-        "7° Básico",
-        "8° Básico",
-        "1° Medio",
-        "2° Medio",
-        "3° Medio",
-        "4° Medio"
+        "1° Básico", "2° Básico", "3° Básico", "4° Básico", "5° Básico", "6° Básico", "7° Básico", "8° Básico",
+        "1° Medio", "2° Medio", "3° Medio", "4° Medio"
     )
 
-    // Estado para guardar los que el profesor vaya marcando
     val cursosSeleccionados = remember { mutableStateListOf<String>() }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background // <-- Que use el color crema/oscuro
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -85,56 +79,68 @@ fun PantallaBienvenida(
                 modifier = Modifier.padding(top = 32.dp)
             )
             Text(
-                text = "¿Cuáles son los cursos que tienes asignados este año? Selecciona tus niveles para comenzar.",
+                text = "Selecciona los cursos que tienes asignados este año para comenzar.",
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 16.dp)
+                modifier = Modifier.padding(vertical = 16.dp),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
 
-            // Lista con scroll para los Checkboxes
-            LazyColumn(
+            // --- LA CUADRÍCULA DE 2 COLUMNAS ---
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), // 2 elementos por fila
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(cursosDisponibles) { curso ->
-                    Row(
+                    val isSelected = cursosSeleccionados.contains(curso)
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                if (cursosSeleccionados.contains(curso)) {
+                                if (isSelected) {
                                     cursosSeleccionados.remove(curso)
                                 } else {
                                     cursosSeleccionados.add(curso)
                                 }
-                            }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        // Si está seleccionado, usa el color primario (azul), si no, un fondo suave
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 0.dp)
                     ) {
-                        Checkbox(
-                            checked = cursosSeleccionados.contains(curso),
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) cursosSeleccionados.add(curso)
-                                else cursosSeleccionados.remove(curso)
-                            }
-                        )
-                        Text(
-                            text = curso,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = curso,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                // El texto se vuelve blanco si está seleccionado
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
 
-            // Botón para guardar
+            // Botón para guardar (aparece cuando hay al menos uno seleccionado)
             Button(
                 onClick = { onCursosSeleccionados(cursosSeleccionados.toList()) },
                 enabled = cursosSeleccionados.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .padding(vertical = 16.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Comenzar a crear escalas de notas", fontSize = 16.sp)
+                Text("Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -223,7 +229,7 @@ fun DialogoTablaNotas(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
             shadowElevation = 8.dp
         ) {
@@ -239,7 +245,7 @@ fun DialogoTablaNotas(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFE2E8F0))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -267,7 +273,11 @@ fun DialogoTablaNotas(
                         val itemIzq = itemsIzquierda[index]
                         val itemDer = if (index < itemsDerecha.size) itemsDerecha[index] else null
 
-                        val colorFondo = if (index % 2 == 0) Color(0xFFF9FAFB) else Color.Transparent
+                        val colorFondo = if (index % 2 == 0) {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                        } else {
+                            Color.Transparent
+                        }
 
                         Row(
                             modifier = Modifier
@@ -289,13 +299,13 @@ fun DialogoTablaNotas(
                                 textAlign = TextAlign.Center,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (itemIzq.nota < 4.0) Color.Red else Color.Unspecified
+                                color = if (itemIzq.nota < 4.0) Color.Red else MaterialTheme.colorScheme.onSurface
                             )
                             Box(
                                 modifier = Modifier
                                     .width(1.dp)
                                     .height(24.dp) // Ajusta la altura según el tamaño de tu fila
-                                    .background(Color(0xFFCBD5E1))
+                                    .background(MaterialTheme.colorScheme.surface)
                             )
                             // LADO DERECHO (Si existe)
                             if (itemDer != null) {
@@ -311,7 +321,7 @@ fun DialogoTablaNotas(
                                     textAlign = TextAlign.Center,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (itemDer.nota < 4.0) Color.Red else Color.Unspecified
+                                    color = if (itemDer.nota < 4.0) Color.Red else MaterialTheme.colorScheme.onSurface
                                 )
                             } else {
                                 Spacer(modifier = Modifier.weight(1f))
@@ -334,7 +344,7 @@ fun DialogoTablaNotas(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     shape = MaterialTheme.shapes.large, // <--- Botón más redondeado
                 ) {
-                    Text("Convertir a PDF")
+                    Text("Exportar a PDF")
                 }
 
                 Button(
