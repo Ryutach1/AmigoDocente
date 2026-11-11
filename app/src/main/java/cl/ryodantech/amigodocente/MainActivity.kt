@@ -18,8 +18,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,8 +44,9 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             var isDarkMode by remember { mutableStateOf(ThemeManager.isDarkMode(this)) }
+            var fontScale by remember { mutableStateOf(ThemeManager.getFontScale(this)) }
 
-            AmigoDocenteTheme(darkTheme = isDarkMode) {
+            AmigoDocenteTheme(darkTheme = isDarkMode, fontScale = fontScale) {
                 Scaffold(modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
 
@@ -58,6 +57,11 @@ class MainActivity : ComponentActivity() {
                         onToggleTheme = {
                             isDarkMode = !isDarkMode
                             ThemeManager.setDarkMode(this, isDarkMode) // Guardamos el cambio
+                        },
+                        fontScale = fontScale, // <-- Pásalo
+                        onFontScaleChange = {
+                            fontScale = it
+                            ThemeManager.setFontScale(this, it)
                         }
                     )
                 }
@@ -68,14 +72,15 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel(),  isDarkMode: Boolean, onToggleTheme: () -> Unit) {
+fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: ConfiguracionViewModel = viewModel(),  isDarkMode: Boolean, onToggleTheme: () -> Unit, fontScale: Float, onFontScaleChange: (Float) -> Unit) {
     val listaNiveles by configViewModel.niveles.collectAsState()
 
     var nivelAEditar by remember { mutableStateOf<NivelEntity?>(null) }
     var nivelAEliminar by remember { mutableStateOf<NivelEntity?>(null) }
     var nivelActual by remember { mutableStateOf<NivelEntity?>(null) }
 
-    var mostrarConfiguracion by remember { mutableStateOf(false) }
+    var mostrarMenuAjustes by remember { mutableStateOf(false) }
+
     var mostrarDialogoNivel by remember { mutableStateOf(false) } // <-- Nuevo
 
     val cargando by configViewModel.isLoading.collectAsState() // <-- NUEVO
@@ -114,14 +119,7 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
 
                     //title = { Text("Mis Cursos", fontWeight = FontWeight.Bold) },
                     actions = {
-                        // BOTÓN DE MODO OSCURO
-                        IconButton(onClick = onToggleTheme) {
-                            Icon(
-                                painter = painterResource ( id = if (isDarkMode) R.drawable.luna_by_magnific_in_flaticon_com else R.drawable.sol_by_magnific_in_flaticon_com),
-                                contentDescription = "Cambiar Tema"
-                            )
-                        }
-                        IconButton(onClick = { mostrarConfiguracion = true }) {
+                        IconButton(onClick = { mostrarMenuAjustes = true }) {
                             Icon(Icons.Default.Settings, contentDescription = "Configuración")
                         }
                     },
@@ -216,8 +214,14 @@ fun PantallaPrincipal(modifier: Modifier = Modifier, configViewModel: Configurac
     }
 
     // --- DIÁLOGOS GLOBALES DE LA PANTALLA PRINCIPAL ---
-    if (mostrarConfiguracion) {
-        DialogoConfiguracion(onDismiss = { mostrarConfiguracion = false })
+    if (mostrarMenuAjustes) {
+        PantallaAjustes(
+            onDismiss = { mostrarMenuAjustes = false },
+            isDarkMode = isDarkMode,
+            onToggleTheme = onToggleTheme,
+            fontScale = fontScale,
+            onFontScaleChange = onFontScaleChange
+        )
     }
 
     if (mostrarDialogoNivel) {
